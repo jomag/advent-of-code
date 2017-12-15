@@ -16,13 +16,10 @@ def part2(txt):
 
     def chk(line):
         s = 0
-        for i in range(len(line)):
-            a = line[i]
-            for j in range(len(line)):
-                b = line[j]
-                if a != b:
-                    if a % b == 0:
-                        s += a // b
+        for a in line:
+            for b in line:
+                if a != b and a % b == 0:
+                    s += a // b
         return s
 
     return sum(chk(line) for line in data)
