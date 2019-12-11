@@ -13,13 +13,57 @@ const (
 	OpAdd = 1
 	// OpMul - Multiply operator
 	OpMul = 2
+	// OpInput - Read input operator
+	OpInput = 3
+	// OpOutput - Print/output operator
+	OpOutput = 4
+	// OpJumpIfTrue - Jump if true
+	OpJumpIfTrue = 5
+	// OpJumpIfFalse - Jump if false
+	OpJumpIfFalse = 6
+	// OpLess - Set true if op 1 < op 2
+	OpLess = 7
+	// OpEqual - Set true if op 1 == op2
+	OpEqual = 8
 	// OpHalt - Halt operator
 	OpHalt = 99
 )
 
-func runIntCode(input []int) (output []int, err error) {
-	buf := make([]int, len(input))
-	copy(buf[:], input)
+func readParameter(param int, buf []int, offs int) int {
+	var mode int
+	switch param {
+	case 0:
+		mode = buf[offs] / 100 % 10
+	case 1:
+		mode = buf[offs] / 1000 % 10
+	case 2:
+		mode = buf[offs] / 10000 % 10
+	case 3:
+		mode = buf[offs] / 100000 % 10
+	case 4:
+		mode = buf[offs] / 1000000 % 10
+	}
+
+	addr := buf[offs+param+1]
+
+	// fmt.Printf("OP: %d, Mode: %d\n", buf[offs], mode)
+
+	if mode == 0 {
+		// Position mode
+		return buf[addr]
+	}
+
+	if mode == 1 {
+		// Immediate mode
+		return addr
+	}
+
+	return 0
+}
+
+func runIntCode(program []int, input int) (output []int, err error) {
+	buf := make([]int, len(program))
+	copy(buf[:], program)
 	pc := 0
 
 	for {
@@ -27,18 +71,64 @@ func runIntCode(input []int) (output []int, err error) {
 			break
 		}
 
-		switch buf[pc] {
+		// fmt.Printf("Next: %d (@%d)\n", buf[pc], pc)
+
+		switch buf[pc] % 100 {
 		case OpAdd:
-			op1 := buf[pc+1]
-			op2 := buf[pc+2]
+			op1 := readParameter(0, buf, pc)
+			op2 := readParameter(1, buf, pc)
 			dst := buf[pc+3]
-			buf[dst] = buf[op1] + buf[op2]
+			buf[dst] = op1 + op2
 			pc += 4
 		case OpMul:
-			op1 := buf[pc+1]
-			op2 := buf[pc+2]
+			op1 := readParameter(0, buf, pc)
+			op2 := readParameter(1, buf, pc)
 			dst := buf[pc+3]
-			buf[dst] = buf[op1] * buf[op2]
+			buf[dst] = op1 * op2
+			pc += 4
+		case OpInput:
+			dst := buf[pc+1]
+			buf[dst] = input
+			pc += 2
+		case OpOutput:
+			op1 := readParameter(0, buf, pc)
+			fmt.Println(op1)
+			pc += 2
+		case OpJumpIfTrue:
+			op1 := readParameter(0, buf, pc)
+			op2 := readParameter(1, buf, pc)
+			if op1 != 0 {
+				pc = op2
+			} else {
+				pc += 3
+			}
+		case OpJumpIfFalse:
+			op1 := readParameter(0, buf, pc)
+			op2 := readParameter(1, buf, pc)
+			if op1 == 0 {
+				pc = op2
+			} else {
+				pc += 3
+			}
+		case OpLess:
+			op1 := readParameter(0, buf, pc)
+			op2 := readParameter(1, buf, pc)
+			dst := buf[pc+3]
+			if op1 < op2 {
+				buf[dst] = 1
+			} else {
+				buf[dst] = 0
+			}
+			pc += 4
+		case OpEqual:
+			op1 := readParameter(0, buf, pc)
+			op2 := readParameter(1, buf, pc)
+			dst := buf[pc+3]
+			if op1 == op2 {
+				buf[dst] = 1
+			} else {
+				buf[dst] = 0
+			}
 			pc += 4
 		default:
 			return nil, fmt.Errorf("Invalid operator '%d' at index %d", buf[pc], pc)
@@ -79,36 +169,17 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// Part 1:
-
-	// Restore "1202 program alarm" state
-	prg[1] = 12
-	prg[2] = 2
-
-	output, err := runIntCode(prg)
+	fmt.Println("\nPart one:")
+	_, err = runIntCode(prg, 1)
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("Part one: %d\n", output[0])
+	fmt.Println("\nPart two:")
+	_, err = runIntCode(prg, 5)
 
-	// Part 2:
-	for noun := 0; noun < 100; noun++ {
-		for verb := 0; verb < 100; verb++ {
-			prg[1] = noun
-			prg[2] = verb
-
-			output, err = runIntCode(prg)
-
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			if output[0] == 19690720 {
-				fmt.Printf("Part two: noun=%d, verb=%d, answer=%d", noun, verb, noun*100+verb)
-				break
-			}
-		}
+	if err != nil {
+		log.Fatal(err)
 	}
 }
