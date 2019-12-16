@@ -61,85 +61,113 @@ func readParameter(param int, buf []int, offs int) int {
 	return 0
 }
 
-func runIntCode(program []int, input []int) (output []int, buf []int, err error) {
-	buf = make([]int, len(program))
+// IntCodeMachine state of machine
+type IntCodeMachine struct {
+	pc           int
+	stopped      bool
+	memory       []int
+	inputBuffer  []int
+	outputBuffer []int
+}
+
+func createMachine(program []int, input []int) (machine IntCodeMachine) {
+	buf := make([]int, len(program))
 	copy(buf[:], program)
-	pc := 0
+
+	return IntCodeMachine{
+		0,
+		false,
+		buf,
+		input,
+		[]int{},
+	}
+}
+
+func run(machine *IntCodeMachine, input []int) (err error) {
+	machine.inputBuffer = append(machine.inputBuffer, input...)
+	buf := machine.memory
+	pc := &machine.pc
 
 	for {
-		if buf[pc] == OpHalt {
+		if buf[*pc] == OpHalt {
+			machine.stopped = true
 			break
 		}
 
 		// fmt.Printf("Next: %d (@%d)\n", buf[pc], pc)
 
-		switch buf[pc] % 100 {
+		switch buf[*pc] % 100 {
 		case OpAdd:
-			op1 := readParameter(0, buf, pc)
-			op2 := readParameter(1, buf, pc)
-			dst := buf[pc+3]
+			op1 := readParameter(0, buf, *pc)
+			op2 := readParameter(1, buf, *pc)
+			dst := buf[*pc+3]
 			buf[dst] = op1 + op2
-			pc += 4
+			*pc += 4
 		case OpMul:
-			op1 := readParameter(0, buf, pc)
-			op2 := readParameter(1, buf, pc)
-			dst := buf[pc+3]
+			op1 := readParameter(0, buf, *pc)
+			op2 := readParameter(1, buf, *pc)
+			dst := buf[*pc+3]
 			buf[dst] = op1 * op2
-			pc += 4
+			*pc += 4
 		case OpInput:
-			dst := buf[pc+1]
-			buf[dst], input = input[0], input[1:]
-			pc += 2
-		case OpOutput:
-			op1 := readParameter(0, buf, pc)
-			output = append(output, op1)
-			pc += 2
-		case OpJumpIfTrue:
-			op1 := readParameter(0, buf, pc)
-			op2 := readParameter(1, buf, pc)
-			if op1 != 0 {
-				pc = op2
+			dst := buf[*pc+1]
+			if len(machine.inputBuffer) > 0 {
+				buf[dst], machine.inputBuffer = machine.inputBuffer[0], machine.inputBuffer[1:]
+				*pc += 2
 			} else {
-				pc += 3
+				// Blocked on input
+				return nil
+			}
+		case OpOutput:
+			op1 := readParameter(0, buf, *pc)
+			machine.outputBuffer = append(machine.outputBuffer, op1)
+			*pc += 2
+		case OpJumpIfTrue:
+			op1 := readParameter(0, buf, *pc)
+			op2 := readParameter(1, buf, *pc)
+			if op1 != 0 {
+				*pc = op2
+			} else {
+				*pc += 3
 			}
 		case OpJumpIfFalse:
-			op1 := readParameter(0, buf, pc)
-			op2 := readParameter(1, buf, pc)
+			op1 := readParameter(0, buf, *pc)
+			op2 := readParameter(1, buf, *pc)
 			if op1 == 0 {
-				pc = op2
+				*pc = op2
 			} else {
-				pc += 3
+				*pc += 3
 			}
 		case OpLess:
-			op1 := readParameter(0, buf, pc)
-			op2 := readParameter(1, buf, pc)
-			dst := buf[pc+3]
+			op1 := readParameter(0, buf, *pc)
+			op2 := readParameter(1, buf, *pc)
+			dst := buf[*pc+3]
 			if op1 < op2 {
 				buf[dst] = 1
 			} else {
 				buf[dst] = 0
 			}
-			pc += 4
+			*pc += 4
 		case OpEqual:
-			op1 := readParameter(0, buf, pc)
-			op2 := readParameter(1, buf, pc)
-			dst := buf[pc+3]
+			op1 := readParameter(0, buf, *pc)
+			op2 := readParameter(1, buf, *pc)
+			dst := buf[*pc+3]
 			if op1 == op2 {
 				buf[dst] = 1
 			} else {
 				buf[dst] = 0
 			}
-			pc += 4
+			*pc += 4
 		default:
-			return nil, nil, fmt.Errorf("Invalid operator '%d' at index %d", buf[pc], pc)
+			return fmt.Errorf("Invalid operator '%d' at index %d", buf[*pc], *pc)
 		}
 
-		if pc >= len(buf) {
-			return nil, nil, fmt.Errorf("Reached end of code")
+		if *pc >= len(buf) {
+			return fmt.Errorf("Reached end of code")
 		}
 	}
 
-	return output, buf, nil
+	return nil
 }
 
 func readInput(filename string) (source string, err error) {
@@ -166,29 +194,46 @@ func parse(source string) (program []int, err error) {
 }
 
 func runSequence(prg []int, phaseSettings []int) (signal int, err error) {
-	output := []int{0}
+	output := 0
 
 	for i := range phaseSettings {
-		output, _, err = runIntCode(prg, []int{phaseSettings[i], output[0]})
+		m := createMachine(prg, []int{})
+		err = run(&m, []int{phaseSettings[i], output})
 		if err != nil {
 			return 0, err
 		}
+		output = m.outputBuffer[0]
 	}
 
-	return output[0], nil
+	return output, nil
 }
 
 func runSequencePart2(prg []int, phaseSettings []int) (signal int, err error) {
-	output := []int{0}
+	count := len(phaseSettings)
+	var machines []IntCodeMachine
 
-	for i := range phaseSettings {
-		output, _, err = runIntCode(prg, []int{phaseSettings[i], output[0]})
-		if err != nil {
-			return 0, err
+	for i := 0; i < count; i++ {
+		machines = append(machines, createMachine(prg, []int{phaseSettings[i]}))
+	}
+
+	outp := 0
+	for {
+		for i := range machines {
+			machine := &machines[i]
+			err = run(machine, []int{outp})
+			if err != nil {
+				return 0, err
+			}
+			outp = machine.outputBuffer[0]
+			machine.outputBuffer = machine.outputBuffer[1:]
+		}
+
+		if machines[len(machines)-1].stopped {
+			break
 		}
 	}
 
-	return output[0], nil
+	return outp, nil
 }
 
 func permutations(inp []int) [][]int {
@@ -255,6 +300,54 @@ func main() {
 	options := permutations([]int{0, 1, 2, 3, 4})
 	for _, opt := range options {
 		signal, err := runSequence(prg, opt)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if signal > highest {
+			highest = signal
+			highestPhaseSettings = opt
+		}
+	}
+
+	fmt.Println("Part One:")
+	fmt.Printf("Highest thruster signal: %d\n", highest)
+	fmt.Println(highestPhaseSettings)
+
+	// Part Two
+
+	examplesPartTwo := []string{
+		"3,26,1001,26,-4,26,3,27,1002,27,2,27,1,27,26,27,4,27,1001,28,-1,28,1005,28,6,99,0,0,5",
+		"3,52,1001,52,-5,52,3,53,1,52,56,54,1007,54,5,55,1005,55,26,1001,54,-5,54,1105,1,12,1,53,54,53,1008,54,0,55,1001,55,1,55,2,53,55,53,4,53,1001,56,-1,56,1005,56,6,99,0,0,0,0,10",
+	}
+
+	examplePhaseSettingsPartTwo := [][]int{
+		{9, 8, 7, 6, 5},
+		{9, 7, 8, 5, 6},
+	}
+
+	for i, example := range examplesPartTwo {
+		prg, err := parse(example)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		signal, err := runSequencePart2(prg, examplePhaseSettingsPartTwo[i])
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		fmt.Printf("Final output: %d\n", signal)
+	}
+
+	options = permutations([]int{5, 6, 7, 8, 9})
+	highest = 0
+
+	for _, opt := range options {
+		signal, err := runSequencePart2(prg, opt)
 
 		if err != nil {
 			log.Fatal(err)
