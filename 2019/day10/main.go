@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"math"
+	"sort"
 	"strings"
 )
 
@@ -66,7 +67,7 @@ func getAngle(a, b Coordinate) float64 {
 	return 180 + angle
 }
 
-func findBestBase(input []string) {
+func findBestBase(input []string) Coordinate {
 	asteroids := getAsteroids(input)
 
 	bestIndex := -1
@@ -103,6 +104,7 @@ func findBestBase(input []string) {
 	fmt.Printf("Best index: %d\n", bestIndex)
 	fmt.Printf("Best base:")
 	fmt.Println(asteroids[bestIndex])
+	return asteroids[bestIndex]
 }
 
 func readInput(filename string) (source []string, err error) {
@@ -112,6 +114,71 @@ func readInput(filename string) (source []string, err error) {
 	}
 	text := string(raw)
 	return strings.Split(text, "\n"), nil
+}
+
+// Asteroid - coordinate and angle + distance relative base asteroid
+type Asteroid struct {
+	x        float64
+	y        float64
+	angle    float64
+	distance float64
+}
+
+func angleDiff(a, b float64) float64 {
+	diff := b - a
+	diff = math.Mod(diff+180.0, 360.0) - 180.0
+	if diff < 0 {
+		return diff + 360.0
+	}
+	return diff
+}
+
+func normalizeAngle(a float64) float64 {
+	if a < 0 {
+		return a + 360
+	}
+	return a
+}
+
+func partTwo(base Coordinate, asteroids []Coordinate) []Asteroid {
+	var list []Asteroid
+
+	for _, asteroid := range asteroids {
+		if base.x != asteroid.x || base.y != asteroid.y {
+			angle := normalizeAngle(getAngle(base, asteroid) - 270)
+			distance := getDistance(base, asteroid)
+			list = append(list, Asteroid{asteroid.x, asteroid.y, angle, distance})
+		}
+	}
+
+	sort.Slice(list, func(i, j int) bool {
+		return list[i].distance < list[j].distance
+	})
+
+	sort.SliceStable(list, func(i, j int) bool {
+		return list[i].angle < list[j].angle
+	})
+
+	// Find first
+	var kills []Asteroid
+
+	dir := list[0].angle
+	kills = append(kills, list[0])
+	list = list[1:]
+	i := 0
+
+	for len(list) > 0 {
+		var j int
+		for j = 0; j < len(list) && list[(i+j)%len(list)].angle-dir < 0.0001; j++ {
+		}
+
+		i = (i + j) % len(list)
+		dir = list[i].angle
+		kills = append(kills, list[i])
+		list = append(list[:i], list[i+1:]...)
+	}
+
+	return kills
 }
 
 func main() {
@@ -183,6 +250,7 @@ func main() {
 		},
 	}
 
+	fmt.Println("Part One:")
 	for n, example := range examples {
 		fmt.Printf("\nExample %d:\n", n)
 		findBestBase(example)
@@ -194,6 +262,17 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Println("\nPart One:")
-	findBestBase(partOneInput)
+	fmt.Println("\nPart One result:")
+	base := findBestBase(partOneInput)
+
+	fmt.Println("\nPart Two:")
+	kills := partTwo(Coordinate{11, 13}, getAsteroids(examples[4]))
+	fmt.Println("\nExample:")
+	for _, i := range []int{1, 2, 3, 10, 20, 50, 100, 199, 200, 201, 299} {
+		fmt.Printf("Asteroid %d: %g,%g\n", i, kills[i-1].x, kills[i-1].y)
+	}
+
+	fmt.Println("\nPart Two result:")
+	kills = partTwo(base, getAsteroids(partOneInput))
+	fmt.Printf("200th: %g,%g (%g)", kills[199].x, kills[199].y, kills[199].x*100+kills[199].y)
 }
