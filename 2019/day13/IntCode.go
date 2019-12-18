@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"strconv"
 	"strings"
@@ -31,7 +32,7 @@ const (
 )
 
 const (
-	minMemorySize = 2048
+	minMemorySize = 8192
 )
 
 // IntCodeMachine state of machine
@@ -163,6 +164,13 @@ func (m *IntCodeMachine) readParameter(param int, offs int) (val int) {
 	return
 }
 
+// Reset machine. Program will restart from 0.
+func (m *IntCodeMachine) Reset() {
+	m.pc = 0
+	m.inputBuffer = []int{}
+	m.outputBuffer = []int{}
+}
+
 // Run - Run machine until stopped or blocked
 func (m *IntCodeMachine) Run(input []int) (err error) {
 	m.inputBuffer = append(m.inputBuffer, input...)
@@ -276,4 +284,23 @@ func Parse(source string) (program []int, err error) {
 	}
 
 	return code, nil
+}
+
+// Load program from file
+func (m *IntCodeMachine) Load(filename string) error {
+	src, err := ioutil.ReadFile(filename)
+
+	if err != nil {
+		return err
+	}
+
+	prg, err := Parse(string(src))
+
+	if err != nil {
+		return err
+	}
+
+	m.Init(prg, []int{})
+
+	return nil
 }
