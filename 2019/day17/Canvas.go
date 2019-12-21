@@ -93,6 +93,10 @@ func NewCanvas(width, height int, border bool, fill byte) (canvas *Canvas) {
 
 // Get - get character at x,y
 func (c *Canvas) Get(x, y int) byte {
+	if x < 0 || x >= c.width || y < 0 || y >= c.height {
+		return 0
+	}
+
 	idx := (y+c.offset.y)*c.columns + x + c.offset.x
 	return c.buffer[idx]
 }
@@ -104,7 +108,7 @@ func (c *Canvas) Set(x, y int, char byte) {
 }
 
 // Render - render display buffer
-func (c *Canvas) Render(sprites []Sprite) {
+func (c *Canvas) Render(sprites []Sprite, clear bool) {
 	prev := make([]byte, len(sprites))
 
 	for i, sprite := range sprites {
@@ -112,7 +116,10 @@ func (c *Canvas) Render(sprites []Sprite) {
 		c.Set(sprite.x, sprite.y, sprite.char)
 	}
 
-	// fmt.Println("\033[0;0H")
+	if clear {
+		fmt.Println("\033[0;0H")
+	}
+
 	fmt.Print(string(c.buffer))
 
 	for i, sprite := range sprites {
