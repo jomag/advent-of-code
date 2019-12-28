@@ -1,0 +1,52 @@
+; Patterns:
+;
+;   _-=-_
+; ###...###
+;   ^   _
+;
+;   _-=-__-=-_
+; ###.#.##.#.###
+;   ^    ^
+;
+;  _-=-_-=-_
+; ###..#.######
+;  ^   ^
+;
+;  _-=-_-=-_
+; ###.##.###
+;
+;  _-=-_-=-_-=-_
+; ###..##.##.#####
+;  ^   ^   ^
+;
+;    _-=-_-=-_
+; ######.#..###
+;    ^   ^
+;
+;   _-=-_-=-_-=-_
+; #####.#.#.#...###
+;   ^   ^   ^
+;
+
+; First rule: jump if next-next or next-next-next is a hole
+NOT B T  ; T true if tile B is hole
+NOT T T  ; T true if tile B is ground
+AND C T  ; T true if tile B and tile C are both ground
+NOT T T  ; T true if tile B or C are not ground
+OR T J
+
+; Second rule: always jump if next is a hole
+NOT A T
+OR T J
+
+; Third rule: don't jump if tile after landing spot (E) is a
+; hole and the tile after second landing spot (H) is also a hole
+NOT E T  ; T true if tile E (tile after landing spot) is a hole
+NOT T T
+OR H T   ; T true of tile E is not a hole or H is not a hole
+AND T J
+
+; Fourth rule: never jump if landing spot is a hole
+AND D J
+
+RUN
