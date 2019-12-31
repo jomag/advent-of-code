@@ -1,0 +1,26 @@
+east
+take manifold
+south
+take whirled peas
+north
+west
+south
+take space heater
+south
+take dark matter
+north
+east
+north
+west
+south
+take antenna
+north
+east
+south
+east
+take bowl of rice
+north
+take klein bottle
+north
+take spool of cat6
+west
