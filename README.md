@@ -1,5 +1,12 @@
 # Advent Of Code
 
+## 2020
+
+I promised myself to not engage in Advent of Code this year, given
+how many late, sleepless nights it caused last year. And yet here I
+am, on day 2. This year I've at least decided that I will use a
+language I'm really comfortable with (Python 3).
+
 ## 2019
 
 So I decided to pick this up Advent of Code again this year.
