@@ -1,119 +1,82 @@
 import sys
 
 
-class Board:
-    def __init__(self, filename):
-        with open(filename) as f:
-            self.m = [[c for c in line.strip()] for line in f.readlines()]
-
-    def adjacent(self, x, y):
-        h = len(self.m)
-        w = len(self.m[0])
-        return [
-            self.m[y - 1][x - 1] if x > 0 and y > 0 else None,
-            self.m[y - 1][x] if y > 0 else None,
-            self.m[y - 1][x + 1] if x + 1 < w and y > 0 else None,
-            self.m[y][x - 1] if x > 0 else None,
-            self.m[y][x + 1] if x + 1 < w else None,
-            self.m[y + 1][x - 1] if x > 0 and y + 1 < h else None,
-            self.m[y + 1][x] if y + 1 < h else None,
-            self.m[y + 1][x + 1] if x + 1 < w and y + 1 < h else None,
-        ]
-
-    def __str__(self):
-        return "\n".join(["".join(row) for row in self.m])
-
-    def step_part1(self):
-        ch = 0
-
-        def calc(x, y):
-            nonlocal ch
-            cur = self.m[y][x]
-            if cur == ".":
-                return "."
-            adj = self.adjacent(x, y)
-
-            if cur == "L" and adj.count("#") == 0:
-                ch += 1
-                return "#"
-            elif cur == "#" and adj.count("#") > 3:
-                ch += 1
-                return "L"
-            else:
-                return cur
-
-        h = len(self.m)
-        w = len(self.m[0])
-        self.m = [[calc(x, y) for x in range(w)] for y in range(h)]
-        return ch
-
-    def look(self, nx, ny, dx, dy, dist=None):
-        h, w = len(self.m), len(self.m[0])
+def adjacent(board, x, y, dist=None):
+    def look(nx, ny, dx, dy, dist=None):
         nx, ny = nx + dx, ny + dy
         while dist != 0 and nx >= 0 and nx < w and ny >= 0 and ny < h:
-            if self.m[ny][nx] != ".":
-                return self.m[ny][nx]
+            if board[ny][nx] != ".":
+                return board[ny][nx]
             nx, ny = nx + dx, ny + dy
             if dist is not None:
                 dist -= 1
 
-    def step_part2(self):
-        h = len(self.m)
-        w = len(self.m[0])
-        ch = 0
+    h, w = len(board), len(board[0])
+    return [
+        look(x, y, -1, -1, dist),
+        look(x, y, 0, -1, dist),
+        look(x, y, 1, -1, dist),
+        look(x, y, -1, 0, dist),
+        look(x, y, 1, 0, dist),
+        look(x, y, -1, 1, dist),
+        look(x, y, 0, 1, dist),
+        look(x, y, 1, 1, dist),
+    ]
 
-        def adjacent(x, y):
-            return [
-                self.look(x, y, -1, -1),
-                self.look(x, y, 0, -1),
-                self.look(x, y, 1, -1),
-                self.look(x, y, -1, 0),
-                self.look(x, y, 1, 0),
-                self.look(x, y, -1, 1),
-                self.look(x, y, 0, 1),
-                self.look(x, y, 1, 1),
-            ]
 
-        def calc(x, y):
-            nonlocal ch
-            cur = self.m[y][x]
-            if cur == ".":
-                return "."
-            adj = adjacent(x, y)
+def step(board, limit, dist):
+    def calc(x, y):
+        nonlocal ch
+        cur = board[y][x]
+        if cur == ".":
+            return "."
+        adj = adjacent(board, x, y, dist)
 
-            if cur == "L" and adj.count("#") == 0:
-                ch += 1
-                return "#"
-            elif cur == "#" and adj.count("#") > 4:
-                ch += 1
-                return "L"
-            else:
-                return cur
+        if cur == "L" and adj.count("#") == 0:
+            ch += 1
+            return "#"
+        elif cur == "#" and adj.count("#") >= limit:
+            ch += 1
+            return "L"
+        else:
+            return cur
 
-        h = len(self.m)
-        w = len(self.m[0])
-        self.m = [[calc(x, y) for x in range(w)] for y in range(h)]
-        return ch
+    ch = 0
+    h = len(board)
+    w = len(board[0])
+    return [[calc(x, y) for x in range(w)] for y in range(h)], ch
 
-    def seated_count(self):
-        return sum(row.count("#") for row in self.m)
+
+def seated(board):
+    return sum(row.count("#") for row in board)
+
+
+def format_board(board):
+    return "\n".join(["".join(row) for row in board])
 
 
 filename = sys.argv[1] if len(sys.argv) > 1 else "input"
-b = Board(filename)
+with open(filename) as f:
+    initial = [[c for c in line.strip()] for line in f.readlines()]
+
 r = 1
-while b.step_part1() > 0:
-    print(f"\nRound {r}:")
-    print(b)
+b, ch = step(initial, 4, 1)
+while ch > 0:
+    if filename != "input":
+        print(f"\nRound {r}:")
+        print(format_board(b))
+    b, ch = step(b, 4, 1)
     r += 1
 
-print(f"Seated after {r} rounds: {b.seated_count()}")
+print(f"Part 1: Seated after {r} rounds: {seated(b)}")
 
-b = Board(filename)
 r = 1
-while b.step_part2() > 0:
-    print(f"\nRound {r}:")
-    print(b)
+b, ch = step(initial, 5, None)
+while ch > 0:
+    if filename != "input":
+        print(f"\nRound {r}:")
+        print(format_board(b))
+    b, ch = step(b, 5, None)
     r += 1
 
-print(f"Seated after {r} rounds: {b.seated_count()}")
+print(f"Part 2: Seated after {r} rounds: {seated(b)}")
