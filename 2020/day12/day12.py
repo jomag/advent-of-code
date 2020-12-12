@@ -1,6 +1,10 @@
 import sys
 from math import cos, sin, radians
 
+sys.path.insert(0, "..")
+
+from utils.visualize import Visualize
+
 
 def part1(prg):
     x, y, d = 0, 0, "e"
@@ -28,7 +32,11 @@ def part1(prg):
 
 
 def part2(prg):
-    x, y, d, wx, wy = 0, 0, "e", 10, 1
+    cx, cy = 512, 512
+    vis = Visualize(cx * 2, cy * 2)
+    vis.scale = 1
+
+    x, y, wx, wy = 0, 0, 10, 1
     for op in prg:
         m, v = op[0], op[1]
         if m == "f":
@@ -48,6 +56,9 @@ def part2(prg):
             wx += v
         if m == "w":
             wx -= v
+        vis.line_to(x / 80 + cx, y / 80 + cy)
+        vis.snap(area=(264, 10, 806, 615))
+    vis.save_gif()
     return x, y
 
 
