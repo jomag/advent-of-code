@@ -14,11 +14,11 @@ def add_rule(line: str):
     rules[int(name)] = groups
 
 
-def validate_seq(seq, data: str, indent):
+def validate_seq(seq, data):
     next_subs = [data]
 
     for e in seq:
-        subs = [s for s in next_subs]
+        subs = next_subs
         next_subs = []
 
         for sub in subs:
@@ -26,27 +26,17 @@ def validate_seq(seq, data: str, indent):
                 if len(sub) > 0 and e == sub[0]:
                     next_subs.append(sub[1:])
             else:
-                next_subs.extend(validate_rule(e, sub, indent + "  "))
+                next_subs.extend(validate_rule(rules[e], sub))
 
     return next_subs
 
 
-def validate_rule(rule_id, data, indent=""):
-    """Returns all possible remains after rule has been evaluated"""
-    rule = rules[rule_id]
-    remains = []
-
-    for seq in rule:
-        r = validate_seq(seq, data, indent + "  ")
-        if r is not False:
-            remains.extend(r)
-
-    return remains
+def validate_rule(rule, data):
+    return [r for seq in rule for r in validate_seq(seq, data)]
 
 
-def validate(rule_id, substr):
-    remains = validate_rule(rule_id, substr)
-    return any(len(r) == 0 for r in remains)
+def validate(rule, data):
+    return any(len(r) == 0 for r in validate_rule(rule, data))
 
 
 rules = {}
@@ -65,11 +55,11 @@ with open(filename) as f:
             messages.append(line)
 
 
-part1 = sum(1 for m in messages if validate(0, m))
+part1 = sum(1 for m in messages if validate(rules[0], m))
 print(f"Part 1: {part1}")
 
 rules[8] = [[42], [42, 8]]
 rules[11] = [[42, 31], [42, 11, 31]]
 
-part2 = sum(1 for m in messages if validate(0, m))
+part2 = sum(1 for m in messages if validate(rules[0], m))
 print(f"Part 2: {part2}")
