@@ -19,7 +19,7 @@ def play(decks, part=1, game=1):
         if part == 2:
             s1 = ",".join([str(c) for c in decks[0]])
             s2 = ",".join([str(c) for c in decks[1]])
-            s = "|".join([s1, s2])
+            s = f"{s1}|{s2}"
             if s in played:
                 verbose(f"Deck {i+1} is already played!")
                 return 0, decks
@@ -76,7 +76,7 @@ else:
     verbose = print
 
 print(f"== Post-game results ==")
-winner, res = play([[c for c in deck] for deck in decks], part=1)
+winner, res = play([deck[:] for deck in decks], part=1)
 for i, deck in enumerate(res):
     print(f"Player {i+1}'s deck: {', '.join([str(c) for c in deck])}")
 [print(f"\nPart 1: {score(deck)}\n") for deck in res if len(deck) != 0]
@@ -85,7 +85,7 @@ if filename != "input":
     input("Press enter to continue...")
 
 print(f"== Post-game results ==")
-winner, res = play([[c for c in deck] for deck in decks], part=2)
+winner, res = play([deck[:] for deck in decks], part=2)
 for i, deck in enumerate(res):
     print(f"Player {i+1}'s deck: {', '.join([str(c) for c in deck])}")
 [print(f"Part 2: {score(deck)}") for deck in res if len(deck) != 0]
