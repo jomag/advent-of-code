@@ -1,0 +1,22 @@
+Part 1 of this day was quite straight forward. The Python implementation
+was very inefficient and dumb, but it still delivers a value in no time because
+the data set and number of iterations was very limited.
+
+Now for the second part, I was sure there was a more efficient way to restructure
+the solution. What takes time is the many iterations over the whole data
+set. I have later come to realize that putting the cups in a linked list
+and having an array where index is the cup ID and the value is a pointer
+to the next node in the linked list would solve the second part in less
+than a second.
+
+But instead I tried to brute force the problem. After ~10.000 iterations,
+I did a theoretical calculation and ended up with approx 48h to solve the
+problem. Not good enough. By optimizing the Python code, using numpy and
+some smarter algos (for example to find the next destination cup without
+sorting the entire list), I got it down to less than 6 hours. Much
+better, but still not good enough. So I decided to write a second part
+solution in optimized C and managed to get it down to 15 minutes in theory.
+But as the entropy increases, the time to run each iteration increases, so
+the final solution delivers the correct result in approx 60 minutes. Good
+enough, and quite fun to, for once, do low level optimizations instead of
+trying to find better algorithms and data structures.
