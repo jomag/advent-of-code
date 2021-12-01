@@ -1,5 +1,9 @@
 # Advent Of Code
 
+## 2021
+
+Here we go ...
+
 ## 2020
 
 I promised myself to not engage in Advent of Code this year, given
