@@ -1,0 +1,22 @@
+@ inp w
+@ mul x 0
+@ add x z
+@ mod x 26
+~ div z 1,1,1,1,1,26,1,26,26,1,26,26,26,26
+~ add x 12,11,13,11,14,-10,11,-9,-3,13,-5,-10,-4,-5
+@ eql x w
+@ eql x 0
+@ mul y 0
+@ add y 25
+@ mul y x
+@ add y 1
+@ mul z y
+@ mxul y 0
+@ add y w
+~ add y 4,11,5,11,14,7,11,4,6,5,9,12,14,14
+@ mul y x
+@ add z y
+
+
+
+
