@@ -30,22 +30,21 @@ def run(ops, inp):
         except IndexError:
             pass
 
-        match op[0]:
-            case "inp":
-                var[a] = int(inp[inp_idx])
-                inp_idx += 1
-            case "add":
-                var[a] = value(a) + value(b)
-            case "mul":
-                var[a] = value(a) * value(b)
-            case "div":
-                var[a] = value(a) // value(b)
-            case "mod":
-                var[a] = value(a) % value(b)
-            case "eql":
-                var[a] = 1 if value(a) == value(b) else 0
-            case "_":
-                raise Exception(f"Invalid op: {op}")
+        if op[0] == "inp":
+            var[a] = int(inp[inp_idx])
+            inp_idx += 1
+        elif op[0] == "add":
+            var[a] = value(a) + value(b)
+        elif op[0] == "mul":
+            var[a] = value(a) * value(b)
+        elif op[0] == "div":
+            var[a] = value(a) // value(b)
+        elif op[0] == "mod":
+            var[a] = value(a) % value(b)
+        elif op[0] == "eql":
+            var[a] = 1 if value(a) == value(b) else 0
+        else:
+            raise Exception(f"Invalid op: {op}")
 
     return var
 
