@@ -1,5 +1,34 @@
-from typing import Dict
-
+# The idea for this one is that there are two types of algorithms
+# in the input program, and every digit is processed by either
+# algorithm 1 or algorithm 2:
+#
+# - Algorithm 1 multiplies `z` by 26
+# - Algorithm 2 divides `z` by 26
+#
+# There's more happening than that: there's one value that varies
+# with each invocation of algo 1, and 2 values for algo 2.
+# But to allow `z` to end up zero, algo 2 must always negate
+# algo 1. But the algorihms are a bit random. If we consider
+# the result as a stack (multiply by 26 is "push", divide by
+# 26 is "pop"), then my input had the following push and pops:
+#
+# Digit 0: push
+# Digit 1: push
+# Digit 2: push
+# Digit 3: push
+# Digit 4: push
+# Digit 5: pop digit 4
+# Digit 6: push
+# Digit 7: pop digit 6
+# Digit 8: pop digit 3
+# Digit 9: push
+# Digit 10: pop digit 9
+# Digit 11: pop digit 2
+# Digit 12: pop digit 1
+# Digit 13: pop digit 0
+#
+# With these rules in place, I only had to find a combination
+# of input values for the push and pop pairs that resulted in zero.
 
 def parse(data):
     a = [line.split(" ") for line in data]
@@ -15,7 +44,7 @@ def parse(data):
     return ops
 
 
-def run_vm(ops, inp):
+def run_vm(ops, inp, stop_at=None):
     var = {}
     var["x"], var["y"], var["z"], var["w"] = 0, 0, 0, 0
     inp_idx = 0
@@ -31,6 +60,8 @@ def run_vm(ops, inp):
             pass
 
         if op[0] == "inp":
+            if stop_at == inp_idx:
+                return var
             var[a] = int(inp[inp_idx])
             inp_idx += 1
         elif op[0] == "add":
@@ -47,6 +78,17 @@ def run_vm(ops, inp):
             raise Exception(f"Invalid op: {op}")
 
     return var
+
+
+def algo(w, z, a, b, c):
+    if a == 1:
+        z = 26 * z + w + b
+    else:
+        x = z % 26 + b
+        z = z // 26
+        if x != w:
+            z = 26 * z + w + c
+    return z
 
 
 def run_algo(inp):
@@ -106,20 +148,17 @@ def run_algo(inp):
     # Digit 0
     z = inp[0] + 4
 
-    # Digit 1
+    # # Digit 1
     z = 26 * z + inp[1] + 11
 
-    # Digit 2
+    # # Digit 2
     z = 26 * z + inp[2] + 5
 
-    # Digit 3
+    # # Digit 3
     z = 26 * z + inp[3] + 11
 
-    # Digit 4
+    # # Digit 4
     z = 26 * z + inp[4] + 14
-
-    # Digit 0..4
-    # z = 2024920 + inp[0] * 456976 + inp[1] * 17576 + inp[2] * 676 + inp[3] * 26 + inp[4]
 
     # Digit 5
     x = z % 26 - 10
@@ -133,89 +172,75 @@ def run_algo(inp):
     # Digit 7
     x = z % 26 - 9
     z = z // 26
-    if x != inp[6]:
-        z = 26 * z + inp[6] + 4
+    if x != inp[7]:
+        z = 26 * z + inp[7] + 4
 
     # Digit 8
     x = z % 26 - 3
     z = z // 26
-    if x != inp[7]:
-        z = 26 * z + inp[7] + 6
+    if x != inp[8]:
+        z = 26 * z + inp[8] + 6
 
     # Digit 9
-    z = 26 * z + inp[6] + 5
+    z = 26 * z + inp[9] + 5
 
     # Digit 10
     x = z % 26 - 5
     z = z // 26
-    if x != inp[8]:
-        z = 26 * z + inp[8] + 9
+    if x != inp[10]:
+        z = 26 * z + inp[10] + 9
 
     # Digit 11
     x = z % 26 - 10
     z = z // 26
-    if x != inp[9]:
-        z = 26 * z + inp[9] + 12
+    if x != inp[11]:
+        z = 26 * z + inp[11] + 12
 
     # Digit 12
     x = z % 26 - 4
     z = z // 26
-    if x != inp[10]:
-        z = 26 * z + inp[10] + 14
+    if x != inp[12]:
+        z = 26 * z + inp[12] + 14
 
     # Digit 13
     x = z % 26 - 5
     z = z // 26
-    if x != inp[11]:
-        z = 26 * z + inp[11] + 14
-
-    # Same algo as used above:
-    w, x, y, z = 0, 0, 0, 0
-    for n in range(8, 14):
-        if a[n] == 1:
-            # Algo 1
-            z = 26 * z + inp[n] + c[n]
-        elif a[n] == 26:
-            # Algo 2
-            x = z % 26 + b[n]
-            z = z // 26
-            if x != inp[n]:
-                z = 26 * z + inp[n] + c[n]
-        else:
-            raise Exception("Unknown algo")
+    if x != inp[13]:
+        z = 26 * z + inp[13] + 14
 
     return {"w": w, "x": x, "y": y, "z": z}
 
+    # Same algo as used above:
+    # w, x, y, z = 0, 0, 0, 0
+    # for n in range(8, 14):
+    #     if a[n] == 1:
+    #         # Algo 1
+    #         z = 26 * z + inp[n] + c[n]
+    #     elif a[n] == 26:
+    #         # Algo 2
+    #         x = z % 26 + b[n]
+    #         z = z // 26
+    #         if x != inp[n]:
+    #             z = 26 * z + inp[n] + c[n]
+    #     else:
+    #         raise Exception("Unknown algo")
 
-def part1(data, verbose=False):
+    # return {"w": w, "x": x, "y": y, "z": z}
+
+
+def solve(data):
     ops = parse(data)
 
-    num = [1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5]
+    max_inp = [9, 2, 9, 1, 5, 9, 7, 9, 9, 9, 9, 4, 9, 8]
+    min_inp = [2, 1, 6, 1, 1, 5, 1, 3, 9, 1, 1, 1, 8, 1]
 
-    print(f"VM:   {run_vm(ops, num)['z']}")
-    print(f"Algo: {run_algo(num)['z']}")
-
-    # while True:
-
-    #     for n in range(len(num) - 1, -1, -1):
-    #         if num[n] < 9:
-    #             num[n] = num[n] + 1
-    #             break
-    #         else:
-    #             num[n] = 1
-
-    #     inp = "".join([str(d) for d in num])
-    #     if iter % 10000 == 0:
-    #         print(inp)
-    #     var = run_vm(ops, inp)
-    #     if var["z"] == 0:
-    #         print(f"{inp} -> {var}")
+    for inp in [max_inp, min_inp]:
+        vm_z = run_vm(ops, inp)["z"]
+        algo_z = run_algo(inp)["z"]
+        print(f"{inp} -> vm: {vm_z}, algo: {algo_z}")
+        assert vm_z == algo_z
 
     return 1
-
-
-def part2(data, verbose=False):
-    return 2
 
 
 with open("input.txt") as f:
@@ -224,7 +249,5 @@ with open("input.txt") as f:
 with open("example.txt") as f:
     example = [ln.strip() for ln in f.readlines()]
 
-# print(f"Part 1 with example data: {part1(example, verbose=True)}")
-print(f"Part 1 with real input: {part1(lines)}")
-# print(f"Part 2 with example data: {part2(example, verbose=True)}")
-# print(f"Part 2 with real input: {part2(lines)}")
+print(f"Solution:")
+solve(lines)
