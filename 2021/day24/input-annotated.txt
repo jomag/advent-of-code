@@ -1,0 +1,76 @@
+....@ inp w
+....@ mul x 0
+....@ add x z
+....@ mod x 26
+....~ div z 1,1,1,1,1,26,1,26,26,1,26,26,26,26
+....~ add x 12,11,13,11,14,-10,11,-9,-3,13,-5,-10,-4,-5
+....@ eql x w
+....@ eql x 0
+....@ mul y 0
+....@ add y 25
+....@ mul y x
+....@ add y 1
+....@ mul z y
+....@ mul y 0
+....@ add y w
+....~ add y 4,11,5,11,14,7,11,4,6,5,9,12,14,14
+....@ mul y x
+....@ add z y
+
+va = [1,1,1,1,1,26,1,26,26,1,26,26,26,26]
+vb = [12,11,13,11,14,-10,11,-9,-3,13,-5,-10,-4,-5]
+vc = [4,11,5,11,14,7,11,4,6,5,9,12,14,14]
+
+w,x,y,z = 0
+
+for n in range(14):
+    w = inp[n]                      ok!
+    x = z % 26 + vb[n]              ok!
+    z = z / va[n]                   ok!
+    y = 1 if x == w else 26         ok!
+    z = z * y                       ok!
+    y = 0 if x == w else w + vc[n]  ok!
+    z = z + y                       ok!
+
+for n in range(14):
+    x = z % 26 + vb[n]
+    z = z / va[n]
+    if x != inp[n]:
+        z = z * 26
+    if x != w:
+        z = z + inp[n] + vc[n]
+
+
+va = [1,1,1,1,1,26,1,26,26,1,26,26,26,26]
+vb = [12,11,13,11,14,-10,11,-9,-3,13,-5,-10,-4,-5]
+vc = [4,11,5,11,14,7,11,4,6,5,9,12,14,14]
+
+for n in range(14):
+    x = z % 26 + vb[n]
+    z = z / va[n]            # Obs! antingen 1 eller 26
+    if x == inp[n]:
+        z = z * 26
+    else:
+        z = z + inp[n] + vc[n]
+
+
+Digit 0:
+z = z + inp[0] + 4
+
+Digit 1:
+z = z + inp[1] + 11
+
+Digit 2:
+z = z + inp[2] + 5
+
+Digit 3:
+z = z + inp[3] + 11
+
+Digit 4:
+z = z + inp[4] + 14
+
+Digit 5:
+x = z % 26 - 10
+z = z / 26
+if x == inp[n]
+z = z + 
