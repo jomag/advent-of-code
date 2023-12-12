@@ -1,5 +1,18 @@
 # Advent Of Code
 
+## 2023
+
+Same thing as most years: I did not intend to participate, but
+here I am at day 12... I've not committed the solutions to git
+every day, I will commit in batches, and there will be no code
+cleanup. I will also quit when the puzzles start taking too
+much time.
+
+## 2022
+
+I participated in 2022, but I never pushed the solutions.
+I did however find them on my HD, so I will push them now as is.
+
 ## 2021
 
 Here we go ...
