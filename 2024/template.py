@@ -13,9 +13,9 @@ def part2(data, verbose=False):
     return 2
 
 
-def run(label, f, data, verbose=False):
+def run(label, f):
     start = time.perf_counter()
-    result = f(data, verbose=verbose)
+    result = f()
     elapsed = time.perf_counter() - start
     if elapsed > 2:
         elapsed = f"{elapsed:.3f}s"
@@ -33,7 +33,7 @@ with open("example.txt") as f:
 lines = parse(lines)
 example = parse(example)
 
-run("Part 1 with example data", part1, example, verbose=False)
-# run("Part 1 with real input", part1, lines, verbose=False)
-# run("Part 2 with example data", part2, example, verbose=False)
-# run("Part 2 with real input", part2, lines, verbose=False)
+run("Part 1 with example data", lambda: part1(example, verbose=False))
+# run("Part 1 with real input", lambda: part1(lines, verbose=False))
+# run("Part 2 with example data", lambda: part2(example, verbose=False))
+# run("Part 2 with real input", lambda: part2(lines, verbose=False))
