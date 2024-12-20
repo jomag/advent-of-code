@@ -34,13 +34,13 @@ def solve(data, required_gain, max_cheat):
     tot = 0
     for pos, dist in path.items():
         x, y = pos
-        for dx in range(x - max_cheat, x + max_cheat + 1):
-            for dy in range(y - max_cheat, y + max_cheat + 1):
-                cheat_length = abs(x - dx) + abs(y - dy)
-                if cheat_length > max_cheat or (dx, dy) not in path:
+        for dy in range(-max_cheat, max_cheat + 1):
+            for dx in range(abs(dy) - max_cheat, max_cheat - abs(dy) + 1):
+                xx = x + dx
+                yy = y + dy
+                if (xx, yy) not in path:
                     continue
-
-                gain = path[(dx, dy)] - dist - cheat_length
+                gain = path[(xx, yy)] - dist - abs(dy) - abs(dx)
                 if gain >= required_gain:
                     tot += 1
 
